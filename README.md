@@ -101,7 +101,7 @@ npm run check
 npm run package
 ```
 
-ZIPは `dist/presenter-cursor-chrome-1.0.0.zip` に生成されます。中身は `extension/` のファイルだけです。
+ZIPは `dist/presenter-cursor-chrome-1.0.1.zip` に生成されます。中身は `extension/` のファイルだけです。
 
 デモページ：
 
@@ -124,7 +124,7 @@ python3 tests/browser.py
 
 - モデル・設定・ジェスチャー：5テスト。
 - Service Workerのルーティング・撮影対象チェック・注入・メッセージ制限：Chrome APIを代替した5テスト。
-- Chromiumでの描画・実際のマウス/キーボード入力・Undo/Redo・ジェスチャー・iframe・入力保護・ズーム描画・設定画面：14項目。
+- Chromiumでの描画・実際のマウス/キーボード入力・Undo/Redo・ジェスチャー・iframe・入力保護・ズーム描画・設定画面：15項目。本番と同じclosed Shadow DOMで下部メニューの「戻す・やり直す・消去・終了」を実クリックして確認します。
 - マニフェスト、JavaScript構文、参照ファイル、ショートカットの初期割り当て数を検査。
 
 開発環境のChromiumは管理ポリシーにより開発版拡張の読み込みが禁止されています。ポリシーを変更せず、ブラウザテストでは拡張APIを代替しています。ズーム画像は実際のブラウザのスクリーンショットを使いますが、`captureVisibleTab` と `activeTab` の連携、ネイティブのコマンド登録、拡張の実読み込みはこの環境では未確認です。

@@ -22,7 +22,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: presenter-cursor-chrome
-          path: dist/presenter-cursor-chrome-1.0.0.zip
+          path: dist/presenter-cursor-chrome-1.0.1.zip
       - uses: actions/upload-artifact@v4
         if: always()
         with:

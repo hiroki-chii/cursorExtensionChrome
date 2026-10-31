@@ -20,10 +20,14 @@ ARTIFACTS = ROOT / 'artifacts'
 ARTIFACTS.mkdir(exist_ok=True)
 
 MOCK = r"""(() => {
-  // Test-only access to the overlay. Production uses a closed shadow root in
-  // an isolated content-script world; no page-visible hooks are shipped.
+  // Test-only access to the overlay. Most tests use an open root for locators;
+  // the HUD regression test preserves the production closed-root semantics.
   const attachShadow = Element.prototype.attachShadow;
-  Element.prototype.attachShadow = function(options) { return attachShadow.call(this, { ...options, mode: 'open' }); };
+  const shadowRoots = new WeakMap();
+  Element.prototype.attachShadow = function(options) {
+    const root = attachShadow.call(this, { ...options, mode: window.__pc?.useClosedShadow ? options.mode : 'open' });
+    shadowRoots.set(this, root); return root;
+  };
   const runtimeListeners = [], storageListeners = [];
   function dispatch(message) {
     return new Promise((resolve, reject) => {
@@ -32,6 +36,7 @@ MOCK = r"""(() => {
     });
   }
   window.__pc = { dispatch, runtimeListeners, storageListeners, captures: 0, captureFailure: false };
+  __pc.testOverlayRoot = () => shadowRoots.get(document.querySelector('#presenter-cursor-overlay'));
   chrome.runtime = {
     onMessage: { addListener: fn => runtimeListeners.push(fn) },
     sendMessage: async message => {
@@ -135,6 +140,33 @@ with sync_playwright() as p, tempfile.TemporaryDirectory(prefix='presenter-ui-')
     assert state()['strokeCount'] == 1
     page.keyboard.press('Escape'); assert not state()['pen'] and state()['strokeCount'] == 1
     passed('ペン・Undo/Redo・全消去・トリガー描画・Escで線を保持')
+
+    closed = context.new_page(); closed.goto(BASE + '/demo/index.html')
+    closed.evaluate('__pc.useClosedShadow = true')
+    closed.add_script_tag(path=str(ROOT / 'extension/core.js'))
+    closed.add_script_tag(path=str(ROOT / 'extension/content.js'))
+    closed.wait_for_selector('#presenter-cursor-overlay', state='attached')
+    assert closed.evaluate("document.querySelector('#presenter-cursor-overlay').shadowRoot === null")
+    def closed_state(): return closed.evaluate("__pc.dispatch({type:'PC_STATUS'})")
+    def hud_click(name):
+        button = closed.evaluate("name => {const r=__pc.testOverlayRoot().querySelector('[data-action=\"'+name+'\"]').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};}", name)
+        closed.mouse.click(button['x'], button['y'])
+    closed.evaluate("__pc.dispatch({type:'PC_ACTION',action:'togglePen'})")
+    closed.mouse.move(150, 250); closed.mouse.down(); closed.mouse.move(350, 260, steps=10); closed.mouse.up()
+    assert closed_state()['strokeCount'] == 1
+    closed.evaluate("__pc.testOverlayRoot().querySelector('[data-action=clearEffects]').focus()")
+    closed.keyboard.press('Escape'); assert not closed_state()['pen'] and closed_state()['strokeCount'] == 1
+    closed.evaluate("__pc.dispatch({type:'PC_ACTION',action:'togglePen'})")
+    hud_click('undoDrawing'); assert closed_state()['strokeCount'] == 0 and closed_state()['redoCount'] == 1
+    hud_click('redoDrawing'); assert closed_state()['strokeCount'] == 1 and closed_state()['redoCount'] == 0
+    hud_click('clearDrawing'); assert closed_state()['strokeCount'] == 0 and closed_state()['pen']
+    closed.mouse.move(200, 300); closed.mouse.down(); closed.mouse.move(350, 350, steps=10); closed.mouse.up()
+    assert closed_state()['strokeCount'] == 1
+    hud_click('clearEffects'); assert not closed_state()['pen'] and closed_state()['strokeCount'] == 1
+    assert closed.evaluate("__pc.testOverlayRoot().querySelector('.surface').classList.contains('interactive') === false")
+    closed.locator('#test-button').click(); expect(closed.locator('#counter')).to_have_text('1 clicks')
+    closed.close(); page.bring_to_front()
+    passed('closed Shadow DOMの下部メニューでUndo/Redo・消去・終了を実クリック')
 
     action('clearDrawing')
     draw([(200, 200), (255, 285), (330, 205)], button='middle')

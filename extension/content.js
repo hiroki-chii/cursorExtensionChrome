@@ -185,6 +185,15 @@
   shadow.addEventListener('pointerdown', event => { if (event.target.closest('button')) event.stopPropagation(); });
   shadow.addEventListener('click', event => { const button = event.target.closest('[data-action]'); if (button) { event.preventDefault(); event.stopPropagation(); action(button.dataset.action); } });
 
+  function onInput(type, handler, options = true) {
+    // Outside a closed shadow root, composedPath hides the HUD and surface.
+    // Handle overlay input inside its root, where isUI can identify buttons;
+    // window listeners keep handling page input without processing it twice.
+    window.addEventListener(type, event => {
+      if (!event.composedPath().includes(host)) handler(event);
+    }, options);
+    shadow.addEventListener(type, handler, options);
+  }
   function isUI(event) { return event.composedPath().some(node => node === hud || node === toast); }
   function swallow(event) { event.preventDefault(); event.stopImmediatePropagation(); }
   function addRipple(p, button) {
@@ -206,14 +215,14 @@
       if (typeof input.label === 'string') displayKey(input.label.slice(0, 60));
     }
   }
-  window.addEventListener('pointermove', event => {
+  onInput('pointermove', event => {
     if (!config.enabled || isUI(event)) return;
     movePointer({ x: event.clientX, y: event.clientY });
     if (gesture) { swallow(event); if (gesture.length < 3000) gesture.push({ ...point }); }
     else if (areaStart) { swallow(event); areaRect = C.rectBetween(areaStart, point); }
     else if (stroke) { swallow(event); moveStroke(point); }
   }, true);
-  window.addEventListener('pointerdown', event => {
+  onInput('pointerdown', event => {
     if (!config.enabled || isUI(event)) return;
     movePointer({ x: event.clientX, y: event.clientY }); addRipple(point, event.button);
     if (event.button === 1 && config.gesture.enabled) {
@@ -223,7 +232,7 @@
     } else if (event.button === 0 && modes.pen) { swallow(event); startStroke(point); }
     else if (modes.zoom) swallow(event);
   }, true);
-  window.addEventListener('pointerup', event => {
+  onInput('pointerup', event => {
     if (!config.enabled || isUI(event)) return;
     if (event.button === 1 && gesture) {
       swallow(event); const result = C.recognizeGesture(gesture); gesture = null; suppressClickUntil = performance.now() + 300;
@@ -235,26 +244,27 @@
     } else if (event.button === 0 && stroke && !triggerHeld) { swallow(event); finishStroke(); }
     else if (modes.zoom) swallow(event);
   }, true);
-  for (const name of ['click', 'dblclick', 'auxclick', 'contextmenu']) window.addEventListener(name, event => {
+  for (const name of ['click', 'dblclick', 'auxclick', 'contextmenu']) onInput(name, event => {
     if (config.enabled && !isUI(event) && (modes.pen || selecting || modes.zoom || gesture || (name === 'auxclick' && performance.now() < suppressClickUntil))) swallow(event);
   }, true);
-  window.addEventListener('wheel', event => {
+  onInput('wheel', event => {
     if (!config.enabled || !modes.zoom || isUI(event)) return;
     swallow(event);
     zoomScale = Math.max(config.zoom.minScale, Math.min(config.zoom.maxScale, zoomScale * Math.exp(-event.deltaY * 0.0015)));
     updateUI();
   }, { capture: true, passive: false });
-  window.addEventListener('keydown', event => {
-    if (!event.isTrusted || !config.enabled || isUI(event)) return;
+  onInput('keydown', event => {
+    if (!event.isTrusted || !config.enabled) return;
     const name = shortcutAction(event);
     if (event.key === 'Escape') { clearEffects(); updateUI(); return; }
+    if (isUI(event) && !name) return;
     if (name) { swallow(event); if (!event.repeat) action(name); }
     else if (modes.pen && !event.repeat && !event.isComposing && !isEditable(event) && triggerMatches(event, config.pen.triggerKey)) {
       swallow(event); triggerHeld = true; startStroke(point); updateUI();
     }
     displayKey(keyLabel(event));
   }, true);
-  window.addEventListener('keyup', event => {
+  onInput('keyup', event => {
     if (triggerHeld && triggerMatches(event, config.pen.triggerKey)) { swallow(event); triggerHeld = false; finishStroke(); updateUI(); }
   }, true);
   function displayKey(text) { if (config.enabled && config.keycast.enabled && text) { keycast.textContent = text; keycast.hidden = false; keyUntil = performance.now() + config.keycast.duration; requestDraw(); } }

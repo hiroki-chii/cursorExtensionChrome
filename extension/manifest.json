@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Presenter Cursor — プレゼンを、伝わりやすく。",
   "short_name": "Presenter Cursor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "スポットライト、レーザー、クリック波紋、手書き、ズームでWebページ上のプレゼンと画面共有をサポートします。",
   "minimum_chrome_version": "109",
   "permissions": ["storage", "activeTab", "scripting"],
