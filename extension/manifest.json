@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Presenter Cursor — プレゼンを、伝わりやすく。",
+  "short_name": "Presenter Cursor",
+  "version": "1.0.0",
+  "description": "スポットライト、レーザー、クリック波紋、手書き、ズームでWebページ上のプレゼンと画面共有をサポートします。",
+  "minimum_chrome_version": "109",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "background": { "service_worker": "background.js" },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Presenter Cursor",
+    "default_icon": { "16": "icons/16.png", "32": "icons/32.png", "128": "icons/128.png" }
+  },
+  "icons": { "16": "icons/16.png", "32": "icons/32.png", "48": "icons/48.png", "128": "icons/128.png" },
+  "options_page": "options.html",
+  "content_scripts": [{
+    "matches": ["http://*/*", "https://*/*", "file:///*"],
+    "js": ["core.js", "content.js"],
+    "run_at": "document_idle",
+    "all_frames": true,
+    "match_about_blank": true
+  }],
+  "commands": {
+    "toggleSpotlight": { "suggested_key": { "default": "Ctrl+Shift+S", "mac": "Command+Shift+S" }, "description": "スポットライト ON/OFF" },
+    "toggleLaser": { "suggested_key": { "default": "Ctrl+Shift+L", "mac": "Command+Shift+L" }, "description": "レーザーポインター ON/OFF" },
+    "togglePen": { "suggested_key": { "default": "Ctrl+Shift+P", "mac": "Command+Shift+P" }, "description": "手書きペン ON/OFF" },
+    "toggleZoom": { "suggested_key": { "default": "Ctrl+Shift+M", "mac": "Command+Shift+M" }, "description": "ズーム ON/OFF" },
+    "toggleAreaSpotlight": { "description": "エリアスポットライト ON/OFF" },
+    "undoDrawing": { "description": "手書き：元に戻す" },
+    "redoDrawing": { "description": "手書き：やり直す" },
+    "clearDrawing": { "description": "手書き：全消去" },
+    "allOff": { "description": "全機能をOFF" }
+  }
+}
