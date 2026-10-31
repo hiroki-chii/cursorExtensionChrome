@@ -148,16 +148,45 @@ with sync_playwright() as p, tempfile.TemporaryDirectory(prefix='presenter-ui-')
     closed.wait_for_selector('#presenter-cursor-overlay', state='attached')
     assert closed.evaluate("document.querySelector('#presenter-cursor-overlay').shadowRoot === null")
     def closed_state(): return closed.evaluate("__pc.dispatch({type:'PC_STATUS'})")
-    def hud_click(name):
+    def hud_point(name):
         button = closed.evaluate("name => {const r=__pc.testOverlayRoot().querySelector('[data-action=\"'+name+'\"]').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};}", name)
-        closed.mouse.click(button['x'], button['y'])
+        return button
+    def hud_click(name):
+        button = hud_point(name); closed.mouse.click(button['x'], button['y'])
+    closed.keyboard.press('Control+Shift+p')
+    assert closed_state()['pen'] and closed_state()['strokeCount'] == 0
+    closed.mouse.move(200, 250); closed.keyboard.press('Shift')
+    assert closed_state()['strokeCount'] == 0
+    closed.keyboard.press('Control+Shift+p')
+    assert not closed_state()['pen'] and closed_state()['strokeCount'] == 0
+    closed.keyboard.press('Control+Shift+p')
+    assert closed_state()['pen'] and closed_state()['strokeCount'] == 0
+    for name in ['undoDrawing', 'redoDrawing', 'clearDrawing']:
+        hud_click(name); assert closed_state()['strokeCount'] == 0
+    text = closed.evaluate("() => {const r=__pc.testOverlayRoot().querySelector('.mode-label').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};}")
+    closed.mouse.move(text['x'], text['y']); closed.keyboard.down('Shift')
+    closed.mouse.click(text['x'], text['y']); closed.keyboard.up('Shift')
+    assert closed_state()['strokeCount'] == 0
+    hud_click('clearEffects')
+    assert not closed_state()['pen'] and closed_state()['strokeCount'] == 0
+    closed.keyboard.press('Control+Shift+p')
+    assert closed_state()['pen'] and closed_state()['strokeCount'] == 0
+    # A held drawing trigger must not turn menu interaction into a dot/stroke.
+    button = hud_point('clearEffects'); closed.mouse.move(button['x'], button['y'])
+    closed.keyboard.down('Shift'); closed.mouse.click(button['x'], button['y']); closed.keyboard.up('Shift')
+    assert not closed_state()['pen'] and closed_state()['strokeCount'] == 0
+    assert closed.evaluate("__pc.testOverlayRoot().querySelector('.hud').hidden")
+    passed('何も描かずにメニュー操作・終了しても手書き履歴を作らない')
     closed.evaluate("__pc.dispatch({type:'PC_ACTION',action:'togglePen'})")
+    assert closed.evaluate("__pc.testOverlayRoot().querySelector('[data-action=undoDrawing]').disabled")
     closed.mouse.move(150, 250); closed.mouse.down(); closed.mouse.move(350, 260, steps=10); closed.mouse.up()
     assert closed_state()['strokeCount'] == 1
     closed.evaluate("__pc.testOverlayRoot().querySelector('[data-action=clearEffects]').focus()")
     closed.keyboard.press('Escape'); assert not closed_state()['pen'] and closed_state()['strokeCount'] == 1
     closed.evaluate("__pc.dispatch({type:'PC_ACTION',action:'togglePen'})")
     hud_click('undoDrawing'); assert closed_state()['strokeCount'] == 0 and closed_state()['redoCount'] == 1
+    closed.mouse.move(200, 250); closed.keyboard.press('Shift')
+    assert closed_state()['strokeCount'] == 0 and closed_state()['redoCount'] == 1
     hud_click('redoDrawing'); assert closed_state()['strokeCount'] == 1 and closed_state()['redoCount'] == 0
     hud_click('clearDrawing'); assert closed_state()['strokeCount'] == 0 and closed_state()['pen']
     closed.mouse.move(200, 300); closed.mouse.down(); closed.mouse.move(350, 350, steps=10); closed.mouse.up()

@@ -50,7 +50,8 @@
   const modes = { spotlight: false, area: false, laser: false, pen: false, zoom: false };
   let point = { x: innerWidth / 2, y: innerHeight / 2 }, pointerInside = false;
   let areaRect = null, areaStart = null, selecting = false;
-  let strokes = [], redo = [], stroke = null, triggerHeld = false, gesture = null;
+  let strokes = [], redo = [], stroke = null, triggerHeld = false, triggerStart = null, gesture = null;
+  let pointerOverUI = false;
   let trail = [], ripples = [], animation = 0, zoomImage = null, zoomScale = 2, zoomBusy = false, zoomToken = 0;
   let keyUntil = 0, toastTimer, width = innerWidth, height = innerHeight, dpr = devicePixelRatio;
   let suppressClickUntil = 0, penDirty = true;
@@ -116,6 +117,7 @@
     requestDraw();
   }
   function finishStroke() {
+    triggerStart = null;
     if (!stroke) return;
     strokes.push(stroke); if (strokes.length > 200) strokes.shift();
     stroke = null; redo = []; penDirty = true; updateUI();
@@ -194,7 +196,15 @@
     }, options);
     shadow.addEventListener(type, handler, options);
   }
-  function isUI(event) { return event.composedPath().some(node => node === hud || node === toast); }
+  function isUI(event) {
+    if (event.composedPath().some(node => node === hud || node === toast)) return true;
+    // Pointer capture can keep the surface as the target over the menu.
+    if (!hud.hidden && 'clientX' in event) {
+      const rect = hud.getBoundingClientRect();
+      return event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
+    }
+    return false;
+  }
   function swallow(event) { event.preventDefault(); event.stopImmediatePropagation(); }
   function addRipple(p, button) {
     if (!config.enabled || !config.ripple.enabled || ![0, 2].includes(button)) return;
@@ -216,14 +226,24 @@
     }
   }
   onInput('pointermove', event => {
-    if (!config.enabled || isUI(event)) return;
+    pointerOverUI = isUI(event);
+    if (!config.enabled) return;
+    if (pointerOverUI) { finishStroke(); return; }
     movePointer({ x: event.clientX, y: event.clientY });
     if (gesture) { swallow(event); if (gesture.length < 3000) gesture.push({ ...point }); }
     else if (areaStart) { swallow(event); areaRect = C.rectBetween(areaStart, point); }
     else if (stroke) { swallow(event); moveStroke(point); }
+    else if (triggerHeld && modes.pen) {
+      const origin = triggerStart;
+      triggerStart = { ...point };
+      if (origin && Math.hypot(point.x - origin.x, point.y - origin.y) >= 1) {
+        swallow(event); startStroke(origin); moveStroke(point);
+      }
+    }
   }, true);
   onInput('pointerdown', event => {
-    if (!config.enabled || isUI(event)) return;
+    pointerOverUI = isUI(event);
+    if (!config.enabled || pointerOverUI) return;
     movePointer({ x: event.clientX, y: event.clientY }); addRipple(point, event.button);
     if (event.button === 1 && config.gesture.enabled) {
       swallow(event); finishStroke(); gesture = [{ ...point }]; suppressClickUntil = performance.now() + 1000; updateUI();
@@ -260,7 +280,10 @@
     if (isUI(event) && !name) return;
     if (name) { swallow(event); if (!event.repeat) action(name); }
     else if (modes.pen && !event.repeat && !event.isComposing && !isEditable(event) && triggerMatches(event, config.pen.triggerKey)) {
-      swallow(event); triggerHeld = true; startStroke(point); updateUI();
+      swallow(event); triggerHeld = true;
+      // A key press alone is not a stroke. Wait for real movement outside UI.
+      triggerStart = pointerInside && !pointerOverUI ? { ...point } : null;
+      updateUI();
     }
     displayKey(keyLabel(event));
   }, true);
