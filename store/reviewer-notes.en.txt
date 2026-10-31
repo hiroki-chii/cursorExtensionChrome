@@ -1,0 +1,25 @@
+Extension: Presenter Cursor
+Version: 1.0.2
+No account, login, subscription, payment, or external backend is required.
+
+Purpose
+Provide visual presentation aids inside ordinary web pages: spotlight, area highlight, laser, click rings, freehand annotations, a static snapshot zoom, and optional shortcut-key display.
+
+Suggested test steps
+1. Open an ordinary HTTPS page such as https://example.com/. Pin the extension and open its popup. It cannot run on chrome:// pages, the Chrome Web Store, or the built-in PDF viewer.
+2. Turn on spotlight and move the pointer. Press Esc to exit. Select area highlight, return to the page, and drag to select a rectangle. Esc exits.
+3. Turn on the pen and draw a line on the page. Click Undo, Redo, Clear, and Exit in the bottom toolbar. These are real interactive controls inside a closed shadow root. Menu clicks must not draw strokes or create undo history.
+4. With the pen enabled and Shift selected as its trigger, hold Shift and move the pointer outside the toolbar to draw without holding a mouse button. Pressing Shift without moving the pointer must not create a stroke.
+5. For zoom, open the extension popup on the target tab first, then turn on zoom. This user action grants activeTab permission for captureVisibleTab. Zoom uses a static screenshot of the visible tab, not live video. Move the pointer to change the view, scroll the wheel to change scale, and press Esc to exit.
+6. Enable shortcut-key display. On the page, use a combination such as Ctrl+Alt+K. Ordinary text input and keys in text/password fields are excluded from this display. The screenshot used by zoom still contains whatever is visibly rendered in the tab.
+7. Use the power button to turn all visual aids and gestures off. Settings persist locally; strokes and screenshots are not written to persistent storage or sent to a server.
+
+Shortcuts
+Default Chrome command suggestions are Ctrl+Shift+S / L / P / M. Other commands are available without default assignments. Browser-reserved keys and existing extensions can cause conflicts. Verify or reassign them at chrome://extensions/shortcuts, or use popup buttons. Page-level shortcuts are configured separately. The UI uses Windows key labels.
+
+Permissions and data
+storage: local appearance and control preferences.
+activeTab: user-invoked tab capture for zoom and access to the selected tab.
+scripting: inject bundled scripts if an already-open page has no receiver.
+Content scripts match ordinary HTTP/HTTPS pages and user-permitted file pages, including frames, to provide cursor effects and input handling.
+Website content (snapshot), user activity (pointer/key events), and current tab URL checks are processed locally. No analytics, advertising, data sale, remote code, or automatic external data transmission is implemented.

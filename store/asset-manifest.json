@@ -1,0 +1,22 @@
+{
+  "version": "1.0.2",
+  "date_jst": "2026-10-31",
+  "capture": "Actual bundled popup/options UI and canvas renderers in Chromium; Chrome APIs supplied by store/source/chrome-fixture.js. Original fictional demo content. No extension installation or captureVisibleTab success is implied.",
+  "screenshots": [
+    "assets/screenshots/01-control-panel.png",
+    "assets/screenshots/02-spotlight.png",
+    "assets/screenshots/03-pen-annotations.png",
+    "assets/screenshots/04-laser-clicks-keycast.png",
+    "assets/screenshots/05-settings.png"
+  ],
+  "hashes": {
+    "assets/icon-128.png": "fe8fbf127ab406accf2af647b19802ccb3fa757dd14e4cf24228085f8c9c63b1",
+    "assets/promo-marquee-1400x560.png": "357248da8fd903f16d870f67f0cbdf6081cd1d2665d467311f006f478067cc38",
+    "assets/promo-small-440x280.png": "c841448b70bf6e4f5494680761b43754aea6fe95b910613e4bd228ef1e551ada",
+    "assets/screenshots/01-control-panel.png": "ff1967643c3e21c3024a1cd6c7c9025ddc2759d8371982aa6731e288c1b4f329",
+    "assets/screenshots/02-spotlight.png": "ca173cd5986cc9120bccf133c50cfb96a1d840b2f14bcf2f2d01a6f3d4a3e6b6",
+    "assets/screenshots/03-pen-annotations.png": "ce7424991d08777370dae842c695e102ed39232e66aa3c1cdbe979f98c5a5eb7",
+    "assets/screenshots/04-laser-clicks-keycast.png": "73fb5fbbe3870809b7e61ca89efb2815797ef052518598cd73a7fd1cd74d2184",
+    "assets/screenshots/05-settings.png": "88541ebc205d00ca56998ab0d6940922b333771892143da0d263b2c6dfabfef4"
+  }
+}
