@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import threading
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -24,7 +25,7 @@ STORE = ROOT / 'store'
 ASSETS = STORE / 'assets'
 SHOTS = ASSETS / 'screenshots'
 RAW = ROOT / 'artifacts' / 'webstore'
-VERSION = json.loads((ROOT / 'extension/manifest.json').read_text())['version']
+VERSION = json.loads((ROOT / 'extension/manifest.json').read_text(encoding='utf-8'))['version']
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -103,9 +104,9 @@ def capture_assets():
 
 def package_materials():
     shutil.copyfile(ROOT / 'extension/icons/128.png', ASSETS / 'icon-128.png')
-    listing = (STORE / 'listing.ja.txt').read_text()
+    listing = (STORE / 'listing.ja.txt').read_text(encoding='utf-8')
     description = listing.split('【詳細説明：この欄の本文をストアの「説明」に貼り付け】\n', 1)[1].split('\n【カテゴリ候補：管理画面で選択】', 1)[0].strip() + '\n'
-    (STORE / 'description.ja.txt').write_text(description)
+    (STORE / 'description.ja.txt').write_text(description, encoding='utf-8')
     metadata = {
         'version': VERSION,
         'date_jst': '2026-10-31',
@@ -113,8 +114,8 @@ def package_materials():
         'screenshots': [f'assets/screenshots/{p.name}' for p in sorted(SHOTS.glob('*.png'))],
         'hashes': {str(p.relative_to(STORE)): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(ASSETS.rglob('*.png'))}
     }
-    (STORE / 'asset-manifest.json').write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + '\n')
-    subprocess.run(['python3', str(ROOT / 'scripts/package.py')], check=True)
+    (STORE / 'asset-manifest.json').write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    subprocess.run([sys.executable, str(ROOT / 'scripts/package.py')], check=True)
     extension_zip = ROOT / 'dist' / f'presenter-cursor-chrome-{VERSION}.zip'
     kit = ROOT / 'dist' / f'presenter-cursor-webstore-kit-{VERSION}.zip'
     with ZipFile(kit, 'w', ZIP_DEFLATED) as archive:
