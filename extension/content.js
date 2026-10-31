@@ -335,7 +335,7 @@
     // Never show text entry, passwords, composition or ordinary character keys.
     if (event.isComposing || isEditable(event) || event.composedPath().some(node => node instanceof Element && node.closest('[data-presenter-private]'))) return '';
     const parts = [];
-    if (event.ctrlKey) parts.push('Ctrl'); if (event.metaKey) parts.push('⌘'); if (event.altKey) parts.push('Alt'); if (event.shiftKey) parts.push('Shift');
+    if (event.ctrlKey) parts.push('Ctrl'); if (event.metaKey) parts.push('Win'); if (event.altKey) parts.push('Alt'); if (event.shiftKey) parts.push('Shift');
     if (['Control', 'Meta', 'Alt', 'Shift'].includes(event.key)) return '';
     if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) return '';
     const safeKey = event.key.length === 1 ? event.key.toUpperCase() : event.key.replace('Arrow', '');

@@ -13,7 +13,7 @@
 .popup .tool.wide { min-height:56px; }
 .popup .tool.wide svg { margin:0; }
 .popup .tool.wide .key { top:21px; }
-.popup .tool.wide[aria-pressed="true"]::after { bottom:24px; }
+.popup .tool.wide[aria-pressed="true"]::after { bottom:24px;right:124px; }
 .popup .quick-toggles { margin-top:14px;padding-top:9px; }
 .popup .quick-toggle { padding:4px 0; }
 .popup-footer { margin-top:12px;padding-top:13px; }

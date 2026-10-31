@@ -20,7 +20,7 @@ for (const [section, specs] of Object.entries(fields)) {
   }
 }
 for (const [action, title] of Object.entries(PresenterCore.labels)) {
-  const row = document.createElement('label'); row.className = 'shortcut-row'; row.innerHTML = `<span>${title}</span><span class="shortcut-select"><span class="pill">Ctrl / ⌘ + Shift</span><select data-field="shortcuts.${action}" aria-label="${title}のキー">${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(k => `<option value="${k}">${k}</option>`).join('')}</select></span>`; document.querySelector('#shortcuts').append(row);
+  const row = document.createElement('label'); row.className = 'shortcut-row'; row.innerHTML = `<span>${title}</span><span class="shortcut-select"><span class="pill">Ctrl + Shift</span><select data-field="shortcuts.${action}" aria-label="${title}のキー">${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(k => `<option value="${k}">${k}</option>`).join('')}</select></span>`; document.querySelector('#shortcuts').append(row);
 }
 function reportError(text) { const message = document.querySelector('#settings-message'); message.textContent = text; message.hidden = !text; }
 function render() {

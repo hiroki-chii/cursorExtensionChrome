@@ -37,7 +37,7 @@ Node.jsのインストールやビルドは不要です。Chrome 109以降を使
 
 ### ショートカット
 
-Windows / Linuxでは `Ctrl + Shift`、macOSでは `⌘ + Shift` と次のキーを押します。
+ショートカットはWindows向けの表記です。`Ctrl + Shift` と次のキーを押します。
 
 | キー | 動作 |
 | --- | --- |

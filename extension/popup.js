@@ -12,7 +12,7 @@ function render() {
     button.disabled = unavailable || !current || !config.enabled || busy;
     if (modeFor[action]) {
       button.setAttribute('aria-pressed', String(!!current?.[modeFor[action]]));
-      button.querySelector('.key').textContent = `⇧ ${config.shortcuts[action]}`;
+      button.querySelector('.key').textContent = `Ctrl + Shift + ${config.shortcuts[action]}`;
     } else if (action === 'redoDrawing') button.disabled ||= !current?.redoCount;
     else button.disabled ||= !current?.strokeCount;
   }
